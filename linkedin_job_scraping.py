@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# linkedin_login.py
+# linkedin_jog_scraping.py
+
 import os
 import pandas as pd
 from parsel import Selector
