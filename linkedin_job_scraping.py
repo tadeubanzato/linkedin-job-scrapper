@@ -185,7 +185,6 @@ for posname,compname,joblocation,direct,urlslin,link in zip(position_name,compan
     print(urlslin)
     x = validate_url(urlslin)
     if x == 'TRUE':
-        count_exist += 1
         print('Position exists: ',count_exist)
         break
     else:
@@ -194,6 +193,7 @@ for posname,compname,joblocation,direct,urlslin,link in zip(position_name,compan
         write_to_csv(posname,compname,joblocation,direct,link)
 
 print('\nBUILDING REPORT --------')
+sleep(3)
 print('Total positions found: ',len(position_name))
 print('Total new positions added: ',count_inexist)
-print('Total repeated positions: ',count_exist)
+print('Total repeated positions: ',len(position_name)-count_inexist)
