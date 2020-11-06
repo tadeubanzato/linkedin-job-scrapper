@@ -103,10 +103,17 @@ position_link = [link.get_attribute("href") for link in position_link]
 position_link
 len(position_link)
 
+urls_linkedin = []
+for lin in position_link:
+    terminator = lin.index('?')
+    urls_linkedin.append(lin[:terminator])
+
+
+
 if os.path.isfile('opportunities.csv') is True:
     opportunities = pd.read_csv('opportunities.csv')
 else:
-    dict = {'Job Title': [], 'Company Name': [], 'Location': [], 'Direct URL': [],'LinkedinLink': []}
+    dict = {'Job Title': [], 'Company Name': [], 'Location': [], 'Direct URL': [], 'TrimmedLinkedin' : [],'LinkedinLink': []}
     df = pd.DataFrame(dict)
     df.to_csv('opportunities.csv',mode = 'a', header = True, index = False)
     opportunities = pd.read_csv('opportunities.csv')
@@ -116,7 +123,7 @@ print('\nStart buinding direct links list ...')
 main_window_name = driver.window_handles[0]
 
 def write_to_csv(posname,compname,joblocation,direct,link):
-    dict = {'Job Title': [posname], 'Company Name': [compname], 'Location': [joblocation], 'Direct URL': [direct],'LinkedinLink': [link]}
+    dict = {'Job Title': [posname], 'Company Name': [compname], 'Location': [joblocation], 'Direct URL': [direct],'TrimmedLinkedin' : [urlslin], 'LinkedinLink': [link]}
     df = pd.DataFrame(dict)
     df.to_csv('opportunities.csv',mode = 'a', header = False, index = False)
 
@@ -159,11 +166,11 @@ for link in position_link :
     except NoSuchElementException:
         apply_position()
 
-def validate_url(link):
+def validate_url(urlslin):
     emp_df = pd.read_csv('opportunities.csv',usecols=[4])
     # print(emp_df)
     # f2 = ['https://www.linkedin.com/jobs/view/2257024918/?eBP=JOB_SEARCH_ORGANIC&recommendedFlavor=COMPANY_RECRUIT&refId=3051f9a6-115e-47c3-a266-fe1fc163d1b3&trackingId=FteGSeadtXOUrgJHqXbVxw%3D%3D&trk=flagship3_search_srp_jobs']
-    f2 = [link]
+    f2 = [urlslin]
     if f2 in emp_df.values:
         print('TRUE')
         return 'TRUE'
@@ -174,13 +181,13 @@ def validate_url(link):
 print('\nWriting data to CSV...')
 count_exist = 0
 count_inexist = 0
-for posname,compname,joblocation,direct,link in zip(position_name,company_name,job_location,direct_url,position_link):
-    print(link)
-    x = validate_url(link)
+for posname,compname,joblocation,direct,urlslin,link in zip(position_name,company_name,job_location,direct_url,urls_linkedin,position_link):
+    print(urlslin)
+    x = validate_url(urlslin)
     if x == 'TRUE':
         count_exist += 1
         print('Position exists: ',count_exist)
-        pass
+        break
     else:
         count_inexist += 1
         print('Positions being added: ',count_inexist)
