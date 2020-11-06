@@ -18,16 +18,14 @@ import configparser
 config = configparser.ConfigParser()
 config.read('config.ini')
 
-if os.path.isfile('./opportunities.csv') is True:
-    opportunities = pd.read_csv('opportunities.csv')
+if config.get('HEADLESS', 'headless') == 'Yes':
+    # install webdrive when needed runing headless
+    opts=webdriver.ChromeOptions()
+    opts.headless=True
+    driver = webdriver.Chrome(ChromeDriverManager().install() ,options=opts)
 else:
-    dict = {'Job Title': [], 'Company Name': [], 'Location': [], 'Direct URL': [],'Linkedin Link': []}
-    df = pd.DataFrame(dict)
-    df.to_csv('opportunities.csv',mode = 'a', header = True, index = False)
-    opportunities = pd.read_csv('opportunities.csv')
-
-# install webdrive when needed
-driver = webdriver.Chrome(ChromeDriverManager().install())
+    # install webdrive when needed runing browser
+    driver = webdriver.Chrome(ChromeDriverManager().install())
 
 print('\nExecuting Linkedin Login...')
 # driver.get method() will navigate to a page given by the URL address
@@ -84,43 +82,42 @@ for list in recentList :
 position_name = driver.find_elements_by_class_name('job-card-list__title')
 position_name = [url.text for url in position_name]
 position_name
-# len(position_name)
+len(position_name)
 
 # Get listing Company Name
 company_name = driver.find_elements_by_css_selector('.job-card-container__company-name')
 company_name = [url.text for url in company_name]
 company_name
-# len(company_name)
+len(company_name)
 
 # Get listing location
 job_location = driver.find_elements_by_xpath('//div[starts-with(@class,"artdeco-entity-lockup__caption")]')
 job_location = [url.text for url in job_location]
 job_location
-# len(job_location)
+len(job_location)
 
 # Get full list of links positions
 position_link = driver.find_elements_by_css_selector("div.artdeco-entity-lockup__title > a")
 position_link = [link.get_attribute("href") for link in position_link]
 position_link
-# len(position_link)
+len(position_link)
+
+if os.path.isfile('opportunities.csv') is True:
+    opportunities = pd.read_csv('opportunities.csv')
+else:
+    dict = {'Job Title': [], 'Company Name': [], 'Location': [], 'Direct URL': [],'LinkedinLink': []}
+    df = pd.DataFrame(dict)
+    df.to_csv('opportunities.csv',mode = 'a', header = True, index = False)
+    opportunities = pd.read_csv('opportunities.csv')
 
 print('\nTotal posts: ',len(position_link))
-print('\nStart buinding direct links...')
+print('\nStart buinding direct links list ...')
 main_window_name = driver.window_handles[0]
 
 def write_to_csv(posname,compname,joblocation,direct,link):
-    print('Writing Position ',posname, 'to CSV\n')
-    dict = {'Job Title': [posname], 'Company Name': [compname], 'Location': [joblocation], 'Direct URL': [direct],'Linkedin Link': [link]}
+    dict = {'Job Title': [posname], 'Company Name': [compname], 'Location': [joblocation], 'Direct URL': [direct],'LinkedinLink': [link]}
     df = pd.DataFrame(dict)
-    df.to_csv('opportunities.csv',mode = 'a', header = True, index = False)
-
-def validate_url(link):
-    if link in opportunities.values:
-        print('Position already exist')
-        return True
-    else:
-        print('\nPosition does not exist')
-        return False
+    df.to_csv('opportunities.csv',mode = 'a', header = False, index = False)
 
 def apply_position():
     apply_btn = driver.find_element_by_xpath("//button[contains(@class,'jobs-apply-button')]")
@@ -161,9 +158,34 @@ for link in position_link :
     except NoSuchElementException:
         apply_position()
 
+def validate_url(link):
+    emp_df = pd.read_csv('opportunities.csv',usecols=[4])
+    # print(emp_df)
+    # f2 = ['https://www.linkedin.com/jobs/view/2257024918/?eBP=JOB_SEARCH_ORGANIC&recommendedFlavor=COMPANY_RECRUIT&refId=3051f9a6-115e-47c3-a266-fe1fc163d1b3&trackingId=FteGSeadtXOUrgJHqXbVxw%3D%3D&trk=flagship3_search_srp_jobs']
+    f2 = [link]
+    if f2 in emp_df.values:
+        print('TRUE')
+        return 'TRUE'
+    else:
+        print('FALSE')
+        return 'FALSE'
+
+print('\nWriting data to CSV...')
+count_exist = 0
+count_inexist = 0
 for posname,compname,joblocation,direct,link in zip(position_name,company_name,job_location,direct_url,position_link):
-    if validate_url(link) is True:
-        print('\nPosition already recorded: ',posname, 'to CSV')
+    print(link)
+    x = validate_url(link)
+    if x == 'TRUE':
+        count_exist += 1
+        print('Position exists: ',count_exist)
         pass
     else:
+        count_inexist += 1
+        print('Positions being added: ',count_inexist)
         write_to_csv(posname,compname,joblocation,direct,link)
+
+print('\nBUILDING REPORT --------')
+print('Total positions found: ',len(position_name))
+print('Total new positions added: ',count_inexist)
+print('Total repeated positions: ',count_exist)
