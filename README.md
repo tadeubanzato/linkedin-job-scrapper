@@ -2,7 +2,8 @@
 > I'm not a developer so please contribute to this by improving the code and helping make it optimized.
 
 I started doing this project to study Python, web scraping and database manipulation. :rocket:
-What the script does:
+
+*What the script does:*
 1. Logg into Linkedin with your credentials
 2. Goes automatically to the Job Search page
 3. Add the information for Tob Title and Location
